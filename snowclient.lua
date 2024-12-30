@@ -8,7 +8,7 @@ local Window = Library.CreateLib("SnowMurder", "Synapse")
 local Tab = Window:NewTab("Main")
 
 -- Создаем подсекцию
-local Section = Tab:NewSection("ESP")
+local Section = Tab:NewSection("Main")
 
 Section:NewToggle("ESP", "ToggleInfo", function(state)
     if state then
@@ -229,3 +229,65 @@ end
 
     end
 end)
+
+-- Создаем подсекцию
+local Section = Tab:NewSection("Other")
+
+-- Текстбокс спидхак
+Section:NewTextBox("Speedhack", "TextboxInfo", function(txt)
+	game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = (txt)
+end)
+
+-- Текстбокс JumpHack
+Section:NewTextBox("JumpHack", "TextboxInfo", function(txt)
+	game.Players.LocalPlayer.Character.Humanoid.JumpPower = (txt)
+end)
+
+-- Текстбокс HipHeight
+Section:NewTextBox("HipHeightHack", "TextboxInfo", function(txt)
+	game.Players.LocalPlayer.Character.Humanoid.HipHeight = (txt)
+end)
+
+-- Рычаг ноуклип
+Section:NewToggle("NoClip", "ToggleInfo", function(state)
+    if state then
+        local RunService = game:GetService("RunService")
+
+_G.NoclipEnabled = true -- Устанавливаем флаг
+
+if _G.NoclipEnabled then
+    _G.NoclipConnection = RunService.Stepped:Connect(function()
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+    print("Ноуклип включён")
+end
+    else
+        if _G.NoclipEnabled and _G.NoclipConnection then
+            _G.NoclipConnection:Disconnect() -- Отключаем цикл
+            _G.NoclipConnection = nil
+        
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                for _, part in ipairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true -- Восстанавливаем коллизии
+                    end
+                end
+            end
+            print("Ноуклип выключен")
+        end
+        
+        _G.NoclipEnabled = false -- Сбрасываем флаг
+        
+    end
+end)
+
+
+        

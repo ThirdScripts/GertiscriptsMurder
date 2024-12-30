@@ -152,42 +152,54 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 -- Настройки
-local FlySpeed = 25 -- Скорость полёта
+local FlySpeed = 27 -- Скорость полёта
 
 -- Глобальная переменная для управления
 _G.FlyEnabled = false
 
--- Функция для получения всех объектов с именем "Coin_Server"
-local function getAllCoins()
-    local coins = {}
+-- Функция для получения ближайшей монеты
+local function getNearestCoin()
+    local humanoidRootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return nil end
+
+    local nearestCoin = nil
+    local shortestDistance = math.huge
+
     for _, obj in ipairs(Workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Name == "Coin_Server" then
-            table.insert(coins, obj)
+            local distance = (humanoidRootPart.Position - obj.Position).Magnitude
+            if distance < shortestDistance then
+                nearestCoin = obj
+                shortestDistance = distance
+            end
         end
     end
-    return coins
+
+    return nearestCoin
 end
 
 -- Основной цикл для полёта
 coroutine.wrap(function()
     while true do
         if _G.FlyEnabled then -- Проверяем, включён ли полёт
-            local coins = getAllCoins()
-            if #coins > 0 then
-                for _, coin in ipairs(coins) do
-                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        local humanoidRootPart = LocalPlayer.Character.HumanoidRootPart
-                        local targetPosition = coin.Position
-                        local distance = (humanoidRootPart.Position - targetPosition).Magnitude
-                        local direction = (targetPosition - humanoidRootPart.Position).Unit
+            local humanoidRootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if humanoidRootPart then
+                local coin = getNearestCoin()
+                if coin then
+                    local targetPosition = coin.Position
+                    local distance = (humanoidRootPart.Position - targetPosition).Magnitude
+                    local direction = (targetPosition - humanoidRootPart.Position).Unit
 
-                        -- Движение к монете
-                        while distance > 1 do
-                            if not _G.FlyEnabled then break end -- Останавливаем, если полёт выключен
-                            if not coin.Parent then break end -- Проверяем, существует ли монета
-                            humanoidRootPart.CFrame = humanoidRootPart.CFrame + direction * (FlySpeed * RunService.Heartbeat:Wait())
-                            distance = (humanoidRootPart.Position - targetPosition).Magnitude
-                        end
+                    -- Движение к монете
+                    while _G.FlyEnabled and coin.Parent and distance > 1 do
+                        humanoidRootPart.CFrame = humanoidRootPart.CFrame + direction * (FlySpeed * RunService.Heartbeat:Wait())
+                        distance = (humanoidRootPart.Position - targetPosition).Magnitude
+                    end
+                    
+                    -- Если подлетели близко к монете
+                    if distance <= 1 then
+                        print("Достиг монеты:", coin.Name)
+                        task.wait(2.5) -- Задержка в 1.5 секунды перед продолжением
                     end
                 end
             end
@@ -204,6 +216,7 @@ if _G.FlyEnabled then
 else
     print("Полёт выключен")
 end
+
 
     else
         _G.FlyEnabled = not _G.FlyEnabled

@@ -230,8 +230,10 @@ end
     end
 end)
 
+local Tab = Window:NewTab("Movement")
+
 -- Создаем подсекцию
-local Section = Tab:NewSection("Other")
+local Section = Tab:NewSection("Movehack")
 
 -- Текстбокс спидхак
 Section:NewTextBox("Speedhack", "TextboxInfo", function(txt)
@@ -289,5 +291,65 @@ end
     end
 end)
 
+local Tab = Window:NewTab("Mics")
 
-        
+local Section = Tab:NewSection("Mics")
+
+Section:NewToggle("TP/Kill All (Work only Murder)", "ToggleInfo", function(state)
+    if state then
+        _G.run = true -- Флаг для управления циклом
+
+-- Фиксируем позицию запуска скрипта
+local localPlayer = game.Players.LocalPlayer
+local startPosition = nil
+
+if localPlayer and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    startPosition = localPlayer.Character.HumanoidRootPart.CFrame
+else
+    warn("Скрипт не может определить позицию LocalPlayer.")
+    return
+end
+
+-- Функция для остановки скрипта
+function _G.stopScript()
+    _G.run = false
+    print("Скрипт остановлен.")
+end
+
+-- Главный цикл
+while _G.run do
+    -- Проверяем, что начальная позиция зафиксирована
+    if startPosition then
+        local spacing = 3 -- Расстояние между игроками в линии
+        local positionOffset = 0 -- Начальный сдвиг для первого игрока
+
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            -- Исключаем LocalPlayer
+            if player ~= localPlayer then
+                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = player.Character.HumanoidRootPart
+
+                    -- Сбрасываем инерцию
+                    hrp.Velocity = Vector3.zero
+                    hrp.AssemblyLinearVelocity = Vector3.zero
+                    hrp.AssemblyAngularVelocity = Vector3.zero
+
+                    -- Рассчитываем позицию в линии перед сохранённой позицией LocalPlayer
+                    local newPosition = startPosition.Position + (startPosition.LookVector * 5) + Vector3.new(positionOffset, 0, 0)
+
+                    -- Телепортируем игрока
+                    hrp.CFrame = CFrame.new(newPosition)
+
+                    -- Увеличиваем сдвиг для следующего игрока
+                    positionOffset = positionOffset + spacing
+                end
+            end
+        end
+    end
+
+    wait(0.01)
+end
+    else
+        _G.stopScript()
+    end
+end)
